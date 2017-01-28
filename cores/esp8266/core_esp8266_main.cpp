@@ -24,7 +24,7 @@
 //#define CONT_STACKSIZE 4096
 #include <Arduino.h>
 
-#include "komaino.h"
+//#include "komaino.h"
 
 #include "Schedule.h"
 extern "C" {
@@ -124,6 +124,7 @@ static void loop_wrapper() {
         //KOMAINO初期化
         komaino_init();
         arduino_ota_init();
+        Serial.println("Ready");
         
         setup();
 #ifdef DEBUG_ESP_PORT
@@ -131,6 +132,10 @@ static void loop_wrapper() {
 #endif
         setup_done = true;
     }
+    
+    ArduinoOTA.handle();
+    severHandle();
+
     loop();
     run_scheduled_functions();
     esp_schedule();

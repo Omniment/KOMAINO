@@ -23,7 +23,7 @@
 #define wifiserver_h
 
 extern "C" {
-  #include "include/wl_definitions.h"
+  #include "ESP8266WiFi/src/include/wl_definitions.h"
 
   struct tcp_pcb;
 }

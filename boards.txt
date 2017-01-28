@@ -1,3 +1,4 @@
+menu.FlashSize=Flash Size
 menu.ESPModule=Module
 menu.LwIPVariant=lwIP Variant
 
