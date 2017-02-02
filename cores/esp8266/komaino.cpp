@@ -1,6 +1,11 @@
 //
 //  komaino.cpp
 //
+//  Copyright (c) 2017 Omniment INC. All rights reserved.
+//  This library is free software
+//  License as published by the Free Software Foundation
+//  either
+//  version 2.1 of the License, or (at your option) any later version.
 //
 //  Created by R.tamura on 2017/01/25.
 //
@@ -24,6 +29,7 @@ byte slide_add_cnt = 6;//1画面カウント
 unsigned int slide_dsp_chash;//ディスプレイキャッシュ
 unsigned int slide_cnt;//行送りカウント
 unsigned int slide_char_cnt;//文字カウント
+
 int slide_char;
 String slide_string;
 unsigned int slide_speed;
@@ -34,8 +40,8 @@ ESP8266WebServer server(80);
 
 void handleRoot() {
     //【サーバー】ルートアクセス時の動作
-    server.send(200, "text/html", "HELLO KOMAINO!!");
-    //server.send(200, "text/html", debug);
+    //server.send(200, "text/html", "HELLO KOMAINO!!");
+    server.send(200, "text/html", debug);
 }
 
 void severHandle(){
@@ -87,8 +93,29 @@ void ioex_init() {
     delay(1);
 }
 
-void KomainoControl::print(String slide_string_chach , unsigned int slide_speed_chach){
+void KomainoControl::wifiSta(char* ssid_sta,char* password_sta){
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid_sta, password_sta);
     
+    if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+        Serial.println("Connection Failed! Rebooting...");
+        //komaino.print("CONNECT ERROR");
+        delay(5000);
+        ESP.restart();
+    }else{
+        
+    }
+}
+
+String KomainoControl::wifiIP(){
+    String staIP = "IP:" + String(WiFi.localIP()[0]) + "." +
+    String(WiFi.localIP()[1]) + "." +
+    String(WiFi.localIP()[2]) + "." +
+    String(WiFi.localIP()[3]);
+    return staIP;
+}
+
+void KomainoControl::print(String slide_string_chach , unsigned int slide_speed_chach){
     dsp_temp[0] = 0x0;
     dsp_temp[1] = 0x0;
     dsp_temp[2] = 0x0;
@@ -106,26 +133,32 @@ void KomainoControl::print(String slide_string_chach , unsigned int slide_speed_
     slide_speed = slide_speed_chach;
     
     slide_handle = 1;
+    
+    while (slide_handle == 1){
+        slide();
+        dspWrite();
+        ESP.wdtFeed();
+    }
 }
 
-void KomainoControl::wifiSta(char* ssid_sta,char* password_sta){
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid_sta, password_sta);
-    /*
-    if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        Serial.println("Connection Failed! Rebooting...");
-        //komaino.print("CONNECT ERROR");
-        delay(5000);
-        ESP.restart();
-    }else{
-        staIP = WiFi.localIP();
-        
-        slide_string = staIP;
-        //debug = staIP;
-        slide_speed = 80;
-        slide_handle = 1;
-    }
-    */
+void KomainoControl::printOnLoop(String slide_string_chach , unsigned int slide_speed_chach){
+    dsp_temp[0] = 0x0;
+    dsp_temp[1] = 0x0;
+    dsp_temp[2] = 0x0;
+    dsp_temp[3] = 0x0;
+    dsp_temp[4] = 0x0;
+    
+    dspWrite();
+    
+    slide_millis_old = millis();//文字送りディレイ用
+    slide_add_cnt = 6;//1画面カウント
+    slide_cnt = 0;//行送りカウント
+    slide_char_cnt = 0;//文字カウント
+    
+    slide_string = slide_string_chach;
+    slide_speed = slide_speed_chach;
+    
+    slide_handle = 1;
 }
 
 void KomainoControl::drawDisplay(byte l1,byte l2,byte l3,byte l4,byte l5){
@@ -232,7 +265,6 @@ void slide(){
             dsp_temp[4] = 0x0;
         }
     }
-
 }
 
 //ディスプレイ1列を描画する関数
@@ -255,9 +287,6 @@ void lightProc(byte x, byte y) {
 }
 
 void dspWrite() {
-    
-    slide();
-    
     lightProc(dsp_temp[0], 0x1E);
     delayMicroseconds(dsp_dt);
     lightProc(dsp_temp[1], 0x1D);
@@ -271,5 +300,9 @@ void dspWrite() {
     lightProc(0x00, 0x1F);
 }
 
-KomainoControl komaino;
+void loopManager(){
+    slide();
+    dspWrite();
+}
 
+KomainoControl komaino;

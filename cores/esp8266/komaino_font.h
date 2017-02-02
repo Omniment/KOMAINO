@@ -1,6 +1,11 @@
 //
 //  komaino_font.h
 //
+//  Copyright (c) 2017 Omniment INC. All rights reserved.
+//  This library is free software
+//  License as published by the Free Software Foundation
+//  either
+//  version 2.1 of the License, or (at your option) any later version.
 //
 //  Created by R.tamura on 2017/01/25.
 //

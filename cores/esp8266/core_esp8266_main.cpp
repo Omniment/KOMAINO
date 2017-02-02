@@ -156,7 +156,7 @@ static void loop_wrapper() {
     
     loop();
     
-    dspWrite();
+    loopManager();
     
     run_scheduled_functions();
     esp_schedule();
@@ -189,7 +189,6 @@ void init_done() {
     printf("\n%08x\n", core_version);
     esp_schedule();
 }
-
 
 extern "C" void user_init(void) {
     struct rst_info *rtc_info_ptr = system_get_rst_info();
