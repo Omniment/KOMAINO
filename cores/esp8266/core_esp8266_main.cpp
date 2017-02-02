@@ -1,23 +1,37 @@
 /*
  main.cpp - platform initialization and context switching
  emulation
-
+ 
  Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
  This file is part of the esp8266 core for Arduino environment.
-
+ 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public
  License as published by the Free Software Foundation; either
  version 2.1 of the License, or (at your option) any later version.
-
+ 
  This library is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  Lesser General Public License for more details.
-
+ 
  You should have received a copy of the GNU Lesser General Public
  License along with this library; if not, write to the Free Software
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+/*
+ main.cpp
+ Copyright (c) 2017 Omniment INC. All rights reserved.
+ 
+ This library is free software.
+ 
+ ChangeLog
+ - add include ArduinoOTA.h
+ - add arduino_ota_init
+ - add safeMode
+ - change loop_wrapper
+ 
  */
 
 //This may be used to change user task stack size:
@@ -45,12 +59,13 @@ extern "C" {
 #define OPTIMISTIC_YIELD_TIME_US 16000
 
 void arduino_ota_init();
+void safeMode();
 
 struct rst_info resetInfo;
 
 extern "C" {
-extern const uint32_t __attribute__((section(".ver_number"))) core_version = ARDUINO_ESP8266_GIT_VER;
-const char* core_release = 
+    extern const uint32_t __attribute__((section(".ver_number"))) core_version = ARDUINO_ESP8266_GIT_VER;
+    const char* core_release =
 #ifdef ARDUINO_ESP8266_RELEASE
     ARDUINO_ESP8266_RELEASE;
 #else
@@ -124,6 +139,9 @@ static void loop_wrapper() {
         //KOMAINO初期化
         komaino_init();
         arduino_ota_init();
+        
+        safeMode();
+        
         Serial.println("Ready");
         
         setup();
@@ -135,8 +153,11 @@ static void loop_wrapper() {
     
     ArduinoOTA.handle();
     severHandle();
-
+    
     loop();
+    
+    dspWrite();
+    
     run_scheduled_functions();
     esp_schedule();
 }
@@ -173,19 +194,19 @@ void init_done() {
 extern "C" void user_init(void) {
     struct rst_info *rtc_info_ptr = system_get_rst_info();
     memcpy((void *) &resetInfo, (void *) rtc_info_ptr, sizeof(resetInfo));
-
+    
     uart_div_modify(0, UART_CLK_FREQ / (115200));
-
+    
     init();
-
+    
     initVariant();
-
+    
     cont_init(&g_cont);
-
+    
     ets_task(loop_task,
-        LOOP_TASK_PRIORITY, g_loop_queue,
-        LOOP_QUEUE_SIZE);
-
+             LOOP_TASK_PRIORITY, g_loop_queue,
+             LOOP_QUEUE_SIZE);
+    
     system_init_done_cb(&init_done);
 }
 
@@ -211,4 +232,20 @@ void arduino_ota_init(){
     ArduinoOTA.begin();
     
     ArduinoOTA.handle();
+}
+
+void safeMode(){
+    unsigned int push_time_safe = millis() + 3000;
+    while(digitalRead(butA) == 0 & digitalRead(butB) == 0){
+        if(push_time_safe < millis()){
+            Serial.println("safeMode");
+            while(1){
+                lightProc(0x1F, 0x00);
+                delay(300);
+                lightProc(0x00, 0x00);
+                delay(300);
+                ArduinoOTA.handle();
+            }
+        }
+    }
 }

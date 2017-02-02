@@ -2,7 +2,7 @@
 //  komaino.h
 //
 //
-//  Created by 田村 塁 on 2017/01/25.
+//  Created by R.tamura on 2017/01/25.
 //
 //
 
@@ -22,6 +22,10 @@ void dspWrite();
 class KomainoControl {
 public:
     void print(String slide_string , unsigned int slide_speed);
+    void drawDisplay(byte l1,byte l2,byte l3,byte l4,byte l5);
+    void wifiSta(char* ssid_sta,char* password_sta);
 };
 
 extern KomainoControl komaino;
+
+

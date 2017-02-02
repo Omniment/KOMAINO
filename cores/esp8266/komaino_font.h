@@ -2,7 +2,7 @@
 //  komaino_font.h
 //
 //
-//  Created by 田村 塁 on 2017/01/25.
+//  Created by R.tamura on 2017/01/25.
 //
 //
 
