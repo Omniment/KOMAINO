@@ -17,6 +17,7 @@
 #include "Wire/Wire.h"
 #include "EEPROM/EEPROM.h"
 #include "FS.h"
+#include "ArduinoOTA/ArduinoOTA.h"
 
 byte addr_ioex = 0x20;//IOEXアドレス
 
@@ -66,6 +67,8 @@ void komaino_init(){
     
     sprintf(ssid_ap, "KOMAINO-%06x", ESP.getChipId());
     
+    //WiFi AP 立ち上げ
+    WiFi.mode(WIFI_AP);
     WiFi.softAP(ssid_ap, password_ap);
     IPAddress myIP = WiFi.softAPIP();
     
@@ -94,14 +97,21 @@ void ioex_init() {
 }
 
 void KomainoControl::wifiSta(char* ssid_sta,char* password_sta){
+    WiFi.softAPdisconnect();
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid_sta, password_sta);
     
     if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        Serial.println("Connection Failed! Rebooting...");
-        //komaino.print("CONNECT ERROR");
-        delay(5000);
-        ESP.restart();
+        //APモードに変更
+        char ssid_ap[15];
+        char* password_ap;
+        
+        //esp chip idからWiFi SSID作成
+        password_ap = "12345678";   //apモードパスワード設定
+        sprintf(ssid_ap, "KOMAINO-%06x", ESP.getChipId());
+        
+        WiFi.mode(WIFI_AP);
+        WiFi.softAP(ssid_ap, password_ap);
     }else{
         
     }
@@ -137,7 +147,9 @@ void KomainoControl::print(String slide_string_chach , unsigned int slide_speed_
     while (slide_handle == 1){
         slide();
         dspWrite();
-        ESP.wdtFeed();
+        //delay(1);
+        yield();
+        ArduinoOTA.handle();
     }
 }
 
@@ -303,6 +315,31 @@ void dspWrite() {
 void loopManager(){
     slide();
     dspWrite();
+}
+
+
+void arduino_ota_init(){
+    //OTA
+    ArduinoOTA.onStart([]() {
+        Serial.println("Start");
+    });
+    ArduinoOTA.onEnd([]() {
+        Serial.println("\nEnd");
+    });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+        Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    });
+    ArduinoOTA.onError([](ota_error_t error) {
+        Serial.printf("Error[%u]: ", error);
+        if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+        else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+        else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+        else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+        else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    });
+    ArduinoOTA.begin();
+    
+    ArduinoOTA.handle();
 }
 
 KomainoControl komaino;

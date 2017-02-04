@@ -145,6 +145,7 @@ static void loop_wrapper() {
         Serial.println("Ready");
         
         setup();
+        
 #ifdef DEBUG_ESP_PORT
         DEBUG_ESP_PORT.setDebugOutput(true);
 #endif
@@ -209,6 +210,7 @@ extern "C" void user_init(void) {
     system_init_done_cb(&init_done);
 }
 
+/*
 void arduino_ota_init(){
     //OTA
     ArduinoOTA.onStart([]() {
@@ -232,6 +234,7 @@ void arduino_ota_init(){
     
     ArduinoOTA.handle();
 }
+*/
 
 void safeMode(){
     unsigned int push_time_safe = millis() + 3000;
