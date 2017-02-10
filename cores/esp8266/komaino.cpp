@@ -37,16 +37,16 @@ unsigned int slide_speed;
 
 String debug;
 
-ESP8266WebServer server(80);
+ESP8266WebServer komainoServer(80);
 
 void handleRoot() {
     //【サーバー】ルートアクセス時の動作
-    //server.send(200, "text/html", "HELLO KOMAINO!!");
-    server.send(200, "text/html", debug);
+    komainoServer.send(200, "text/html", "HELLO KOMAINO!!");
+    //komainoServer.send(200, "text/html", debug);
 }
 
 void severHandle(){
-    server.handleClient();
+    komainoServer.handleClient();
 }
 
 void komaino_init(){
@@ -76,8 +76,8 @@ void komaino_init(){
     Serial.print("AP IP address : ");   //デバッグ用出力
     Serial.println(myIP);
     
-    server.on("/", handleRoot);
-    server.begin();
+    komainoServer.on("/", handleRoot);
+    komainoServer.begin();
     Serial.println("HTTP server started");
     
     pinMode(IO1, OUTPUT);
@@ -96,7 +96,7 @@ void ioex_init() {
     delay(1);
 }
 
-void KomainoControl::wifiSta(char* ssid_sta,char* password_sta){
+boolean KomainoControl::wifiSta(char* ssid_sta,char* password_sta){
     WiFi.softAPdisconnect();
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid_sta, password_sta);
@@ -112,8 +112,9 @@ void KomainoControl::wifiSta(char* ssid_sta,char* password_sta){
         
         WiFi.mode(WIFI_AP);
         WiFi.softAP(ssid_ap, password_ap);
+        return false;
     }else{
-        
+        return true;
     }
 }
 
@@ -150,6 +151,7 @@ void KomainoControl::print(String slide_string_chach , unsigned int slide_speed_
         //delay(1);
         yield();
         ArduinoOTA.handle();
+        severHandle();
     }
 }
 
@@ -171,6 +173,10 @@ void KomainoControl::printOnLoop(String slide_string_chach , unsigned int slide_
     slide_speed = slide_speed_chach;
     
     slide_handle = 1;
+}
+
+void KomainoControl::printStop(){
+    slide_handle = 0;
 }
 
 void KomainoControl::drawDisplay(byte l1,byte l2,byte l3,byte l4,byte l5){
@@ -279,6 +285,7 @@ void slide(){
     }
 }
 
+
 //ディスプレイ1列を描画する関数
 void lightProc(byte x, byte y) {
     //一度画面を消去
@@ -315,8 +322,8 @@ void dspWrite() {
 void loopManager(){
     slide();
     dspWrite();
+    ArduinoOTA.handle();
 }
-
 
 void arduino_ota_init(){
     //OTA
