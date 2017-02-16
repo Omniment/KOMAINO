@@ -101,7 +101,11 @@ boolean KomainoControl::wifiSta(char* ssid_sta,char* password_sta){
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid_sta, password_sta);
     
+    //WiFi接続失敗時
     if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+        
+        WiFi.disconnect(); //WiFiを切断
+        
         //APモードに変更
         char ssid_ap[15];
         char* password_ap;
