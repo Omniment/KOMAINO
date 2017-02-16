@@ -104,7 +104,6 @@ static uint32_t g_micros_at_task_start;
 extern "C" void esp_yield() {
     if (cont_can_yield(&g_cont)) {
         cont_yield(&g_cont);
-        //loopManager();
     }
 }
 
