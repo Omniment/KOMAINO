@@ -34,6 +34,12 @@ public:
     void drawDisplay(byte l1,byte l2,byte l3,byte l4,byte l5);
     boolean wifiSta(char* ssid_sta,char* password_sta);
     String wifiIP();
+    
+    void webConnect(char connect_server[256], unsigned int port = 80);
+    void webPrint(char post_data[256] = "");
+    void webPrintln(char post_data[256] = "");
+    //IFTTT
+    void postIFTTT(char IFTTT_event[256],char IFTTT_key[256]);
 };
 
 extern KomainoControl komaino;

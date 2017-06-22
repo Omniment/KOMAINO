@@ -18,6 +18,7 @@
 #include "EEPROM/EEPROM.h"
 #include "FS.h"
 #include "ArduinoOTA/ArduinoOTA.h"
+#include "ESP8266WiFi/src/ESP8266WiFi.h"
 
 byte addr_ioex = 0x20;//IOEXアドレス
 
@@ -38,6 +39,7 @@ unsigned int slide_speed;
 String debug;
 
 ESP8266WebServer komainoServer(80);
+WiFiClient komainoClient;
 
 void handleRoot() {
     //【サーバー】ルートアクセス時の動作
@@ -58,6 +60,7 @@ void komaino_init(){
     
     ioex_init();
     
+    WiFi.disconnect();  //wifiリセット
     //APモード
     char ssid_ap[15];
     char* password_ap;
@@ -71,7 +74,7 @@ void komaino_init(){
     WiFi.mode(WIFI_AP);
     WiFi.softAP(ssid_ap, password_ap);
     IPAddress myIP = WiFi.softAPIP();
-    
+    Serial.println();
     Serial.println(ssid_ap);
     Serial.print("AP IP address : ");   //デバッグ用出力
     Serial.println(myIP);
@@ -249,6 +252,36 @@ void KomainoControl::drawDisplay(byte l1,byte l2,byte l3,byte l4,byte l5){
     dsp_temp[3] = l4;
     dsp_temp[4] = l5;
     */
+}
+
+void KomainoControl::webConnect(char connect_server[],unsigned int port){
+    komainoClient.connect(connect_server, port);
+}
+
+void KomainoControl::webPrint(char post_data[]){
+    komainoClient.print(post_data);
+}
+void KomainoControl::webPrintln(char post_data[]){
+    komainoClient.println(post_data);
+}
+
+//IFTTT
+/*
+void KomainoControl::beginIFTTT(){
+}
+*/
+
+
+void KomainoControl::postIFTTT(char IFTTT_event[],char IFTTT_key[]){
+    
+    char ifttt_post_message[512];
+    komainoClient.connect("maker.ifttt.com",80);
+    sprintf(ifttt_post_message, "POST http://maker.ifttt.com/trigger/%s/with/key/%s HTTP/1.1", IFTTT_event, IFTTT_key);
+    komainoClient.println(ifttt_post_message);
+    komainoClient.println("Host: maker.ifttt.com");
+    komainoClient.println("Connection: close");
+    komainoClient.println();
+    delay(100);
 }
 
 void slide(){
